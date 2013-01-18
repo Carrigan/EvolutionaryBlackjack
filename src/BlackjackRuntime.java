@@ -25,11 +25,12 @@
 import java.util.ArrayList;
 import org.uncommons.maths.random.MersenneTwisterRNG;
 import org.uncommons.maths.random.Probability;
-import org.uncommons.watchmaker.examples.EvolutionLogger;
+import org.uncommons.watchmaker.framework.EvolutionObserver;
 import org.uncommons.watchmaker.framework.EvolutionaryOperator;
 import org.uncommons.watchmaker.framework.GenerationalEvolutionEngine;
 import org.uncommons.watchmaker.framework.operators.EvolutionPipeline;
 import org.uncommons.watchmaker.framework.selection.RouletteWheelSelection;
+import org.uncommons.watchmaker.framework.termination.ElapsedTime;
 import org.uncommons.watchmaker.framework.termination.TargetFitness;
 
 public class BlackjackRuntime {
@@ -39,7 +40,7 @@ public class BlackjackRuntime {
 		
 		// Build a list of possible mutations with the following probabilities of occurring
     	ArrayList<EvolutionaryOperator<BlackjackStrategy>> mutations = new ArrayList<EvolutionaryOperator<BlackjackStrategy>>();
-    	mutations.add(new BlackjackStrategyMutation(new Probability(.03d), new Probability(.05d)));
+    	mutations.add(new BlackjackStrategyMutation(new Probability(.001d), new Probability(.005d)));
     	mutations.add(new BlackjackStrategyCrossover(new Probability(.9d)));
     	EvolutionaryOperator<BlackjackStrategy> pipeline = new EvolutionPipeline<BlackjackStrategy>(mutations);
 		
@@ -47,20 +48,20 @@ public class BlackjackRuntime {
         GenerationalEvolutionEngine<BlackjackStrategy> engine = new GenerationalEvolutionEngine<BlackjackStrategy>(
         		new BlackjackStrategyFactory(),
         		pipeline,
-                new BlackjackStrategyFitnessFunction(25000),	// This is the number of hands played to find the fitness function. Higher number = more accurate fitness!
+                new BlackjackStrategyFitnessFunction(1000000),	// This is the number of hands played to find the fitness function. Higher number = more accurate fitness!
                 new RouletteWheelSelection(),
                 new MersenneTwisterRNG());
     	
         engine.setSingleThreaded(false);
         
         // Display the health of each generation
-        engine.addEvolutionObserver(new EvolutionLogger<BlackjackStrategy>());
+        engine.addEvolutionObserver(new BlackjackObserver());
 
         
         // Go!
-        winningStrat = engine.evolve(100, // individuals per generation
+        winningStrat = engine.evolve(40, // individuals per generation
                       					2, // Elites per generation
-                      					new TargetFitness(.94, true));
+                      					new ElapsedTime(180000));
         
         winningStrat.printStrategy();
 		
